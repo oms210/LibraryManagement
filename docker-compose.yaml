@@ -1,0 +1,39 @@
+services:
+  lending.api:
+    build: ./src/Lending.Api
+    ports:
+      - "5000:8080"
+    volumes:
+      - ./data/lending:/app/data/lending
+    environment:
+      - Redis=redis:6379
+    depends_on:
+      - redis
+
+  fines.api:
+    build: ./src/Fines.Api
+    ports:
+      - "5001:8080"
+    volumes:
+      - ./data/fines:/app/data/fines
+    environment:
+      - Redis=redis:6379
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  librarymanagement.reactui:
+    build:
+      context: ./LibraryManagement.ReactUI
+      args:
+        VITE_LENDING_API_URL: http://lending.api:8080
+        VITE_FINES_API_URL: http://fines.api:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - lending.api
+      - fines.api
