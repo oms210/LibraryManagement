@@ -27,7 +27,8 @@ A full-stack solution for managing library book lending and fines, built with AS
 - **Frontend**: React + TypeScript app powered by Vite.
 - **Inter-service Communication**: Redis is used for pub/sub notifications between APIs.
 - **Containerization**: All services are orchestrated with Docker Compose for easy startup and integration.
-- graph TD
+- ````````
+ graph TD
   LendingApi["Lending.Api (.NET 8)"]
   FinesApi["Fines.Api (.NET 8)"]
   ReactUI["React UI (Vite, TypeScript)"]
@@ -40,6 +41,7 @@ A full-stack solution for managing library book lending and fines, built with AS
   FinesApi -->|SQLite| SQLite
      LendingApi <--> |Pub/Sub| Redis
      FinesApi <--> |Pub/Sub| Redis
+````````
 
 ---
 
