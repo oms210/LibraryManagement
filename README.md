@@ -127,6 +127,15 @@ Both APIs provide Swagger UI for interactive documentation.
 
 ---
 
+## Testing
+
+Unit tests for core services (including NotificationService) are provided using xUnit and FluentAssertions.  
+To run all tests:
+````````
+dotnet test
+````````
+---
+
 ## License
 
 This project is licensed under the MIT License.
