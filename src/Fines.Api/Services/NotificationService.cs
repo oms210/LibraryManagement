@@ -1,19 +1,38 @@
 ﻿using System.Collections.Concurrent;
-
+using Fines.Api.DTOs;
+using Fines.Api.Models;
 namespace Fines.Api.Services
 {
-    public class NotificationService
+    public sealed class NotificationService
     {
-        private readonly ConcurrentQueue<string> _notifications = new();
+        // store per-member notifications
+        private readonly ConcurrentDictionary<int, ConcurrentQueue<NotificationItem>> _notificationsByMember = new();
 
-        public void AddNotification(string message)
+        public void AddNotification(int memberId, string message)
         {
-            _notifications.Enqueue(message);
+            if (memberId < 0) return;
+            var queue = _notificationsByMember.GetOrAdd(memberId, _ => new ConcurrentQueue<NotificationItem>());
+            queue.Enqueue(new NotificationItem
+            {
+                Message = message,
+                Timestamp = DateTimeOffset.UtcNow
+            });
         }
 
-        public IEnumerable<string> GetNotifications()
+        public IEnumerable<NotificationDto> GetNotificationsForMember(int memberId)
         {
-            return _notifications.ToArray();
+            if (_notificationsByMember.TryGetValue(memberId, out var q))
+            {
+                return q.ToArray()
+                        .OrderByDescending(n => n.Timestamp)
+                        .Select(n => new NotificationDto
+                        {
+                            Message = n.Message,
+                            Timestamp = n.Timestamp
+                        });
+            }
+            return Enumerable.Empty<NotificationDto>();
         }
+        
     }
 }

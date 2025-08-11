@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useMemo, useState } from 'react';
+import { LENDING_API_BASE_URL } from '../services/apis';
+import { useAuth } from '../AuthContext';
 
 interface Member {
   id: number;
@@ -8,40 +9,114 @@ interface Member {
   email: string;
 }
 
+type Editable = Partial<Pick<Member, 'firstName' | 'lastName' | 'email'>>;
+
 export default function Members() {
   const [members, setMembers] = useState<Member[]>([]);
   const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [lastName, setLastName]   = useState('');
+  const [email, setEmail]         = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [draft, setDraft]         = useState<Editable>({});
+  const { role } = useAuth();
 
-  const API_BASE = 'http://localhost:5000';
-
-  useEffect(() => {
-    fetchMembers();
-  }, []);
+  useEffect(() => { fetchMembers(); }, []);
 
   const fetchMembers = async () => {
-    const res = await axios.get<Member[]>(`${API_BASE}/api/members`);
-    setMembers(res.data);
+    try {
+      const response = await fetch(`${LENDING_API_BASE_URL}/api/members`);
+      if (!response.ok) throw new Error('Failed to fetch members');
+      const data: Member[] = await response.json();
+      setMembers(data);
+    } catch (error) {
+      console.error('Error loading members:', error);
+    }
   };
 
   const addMember = async () => {
-    await axios.post(`${API_BASE}/api/members`, { firstName, lastName, email });
-    setFirstName('');
-    setLastName('');
-    setEmail('');
-    fetchMembers();
+    try {
+      const response = await fetch(`${LENDING_API_BASE_URL}/api/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Role: role },
+        body: JSON.stringify({ firstName, lastName, email }),
+      });
+      if (!response.ok) throw new Error('Failed to add member');
+      setFirstName('');
+      setLastName('');
+      setEmail('');
+      fetchMembers();
+    } catch (error) {
+      console.error('Error adding member:', error);
+      alert('Failed to add member.');
+    }
   };
 
   const deleteMember = async (id: number) => {
-    await axios.delete(`${API_BASE}/api/members/${id}`);
-    fetchMembers();
+    try {
+      const response = await fetch(`${LENDING_API_BASE_URL}/api/members/${id}`, {
+        method: 'DELETE',
+        headers: { Role: role },
+      });
+      if (!response.ok) throw new Error('Failed to delete member');
+      setMembers(prev => prev.filter(m => m.id !== id));
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      alert('Failed to delete member.');
+    }
   };
+
+  const beginEdit = (m: Member) => {
+    setEditingId(m.id);
+    setDraft({ firstName: m.firstName, lastName: m.lastName, email: m.email });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setDraft({});
+  };
+
+  const updateMember = async (id: number) => {
+    try {
+      const response = await fetch(`${LENDING_API_BASE_URL}/api/members/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Role: role },
+        body: JSON.stringify({ id, ...draft }),
+      });
+      if (!response.ok) throw new Error('Failed to update member');
+      else
+        fetchMembers();
+
+      // // Optimistic local update
+      // setMembers(prev =>
+      //   prev.map(m => (m.id === id ? { ...m, ...draft } as Member : m))
+      // );
+
+      cancelEdit();
+    } catch (error) {
+      console.error('Error updating member:', error);
+      //alert('Failed to update member.');
+    }
+  };
+
+  const canSave = useMemo(() => {
+    if (editingId == null) return false;
+    const e = members.find(m => m.id === editingId);
+    if (!e) return false;
+    const firstName = (draft.firstName ?? '').trim();
+    const lastName = (draft.lastName ?? '').trim();
+    const emailAdd = (draft.email ?? '').trim();
+    if (!firstName || !lastName || !emailAdd) return false;
+    return firstName !== e.firstName || lastName !== e.lastName || emailAdd !== e.email;
+  }, [editingId, draft, members]);
 
   return (
     <div className="container">
       <h2 className="mb-4">👥 Members</h2>
-
+      {role !== 'manager' && (
+        <div className="alert alert-warning">
+          You do not have permission to manage members.
+        </div>
+      )}
       <div className="row g-3 mb-4">
         <div className="col-md-4">
           <input
@@ -83,24 +158,100 @@ export default function Members() {
             <tr>
               <th>Full Name</th>
               <th>Email</th>
-              <th style={{ width: '100px' }}>Action</th>
+              <th style={{ width: 200 }}>Action</th>
             </tr>
           </thead>
           <tbody>
-            {members.map((member) => (
-              <tr key={member.id}>
-                <td>{member.firstName} {member.lastName}</td>
-                <td>{member.email}</td>
-                <td>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => deleteMember(member.id)}
-                  >
-                    🗑️ Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {members.map((m) => {
+              const isEditing = editingId === m.id;
+              return (
+                <tr key={m.id}>
+                  <td>
+                    {isEditing ? (
+                      <div className="row g-2">
+                        <div className="col">
+                          <input
+                            className="form-control form-control-sm"
+                            value={draft.firstName ?? ''}
+                            onChange={(e) =>
+                              setDraft(d => ({ ...d, firstName: e.target.value }))
+                            }
+                            placeholder="First name"
+                          />
+                        </div>
+                        <div className="col">
+                          <input
+                            className="form-control form-control-sm"
+                            value={draft.lastName ?? ''}
+                            onChange={(e) =>
+                              setDraft(d => ({ ...d, lastName: e.target.value }))
+                            }
+                            placeholder="Last name"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {m.firstName} {m.lastName}
+                      </>
+                    )}
+                  </td>
+
+                  <td>
+                    {isEditing ? (
+                      <input
+                        className="form-control form-control-sm"
+                        type="email"
+                        value={draft.email ?? ''}
+                        onChange={(e) =>
+                          setDraft(d => ({ ...d, email: e.target.value }))
+                        }
+                        placeholder="Email"
+                      />
+                    ) : (
+                      m.email
+                    )}
+                  </td>
+
+                  <td className="text-nowrap">
+                    {!isEditing ? (
+                      <>
+                        <button
+                          className="btn btn-sm btn-outline-secondary me-2"
+                          onClick={() => beginEdit(m)}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => deleteMember(m.id)}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="btn btn-sm btn-success me-2"
+                          onClick={() => updateMember(m.id)}
+                          disabled={!canSave}
+                          title={canSave ? 'Save changes' : 'No changes to save'}
+                        >
+                          ✅ Save
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={cancelEdit}
+                        >
+                          ✖️ Cancel
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+
             {members.length === 0 && (
               <tr>
                 <td colSpan={3} className="text-center text-muted">

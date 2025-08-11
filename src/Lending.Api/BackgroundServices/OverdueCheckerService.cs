@@ -2,6 +2,7 @@
 using Lending.Api.Models;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
+using System.Text.Json;
 
 namespace Lending.Api.BackgroundServices
 {
@@ -33,8 +34,13 @@ namespace Lending.Api.BackgroundServices
 
                 foreach (var loan in overdueLoans)
                 {
-                    var message = $"{loan.Member.FirstName} {loan.Member.LastName} has overdue book: {loan.Book.Title}";
-                    await pub.PublishAsync("overdue_notifications", message);
+                    var fineEvent = new OverdueFineEvent()
+                    {
+                        MemberId = loan.MemberId,
+                        BookId = loan.BookId
+                    };
+                    var message = JsonSerializer.Serialize(fineEvent);
+                    await pub.PublishAsync("fines", message);
                 }
 
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);

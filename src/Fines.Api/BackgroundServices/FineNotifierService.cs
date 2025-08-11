@@ -63,19 +63,19 @@ public class FineNotifierService : BackgroundService
             var db = scope.ServiceProvider.GetRequiredService<FinesDbContext>();
 
             var overdueFines = await db.Fines
-                .Where(f => !f.Collected && f.CreatedAt < DateTime.UtcNow.AddMinutes(-1))
+                .Where(f => !f.Collected &&  f.Amount < 10 && f.CreatedAt < DateTime.UtcNow.AddMinutes(-1))
                 .ToListAsync(stoppingToken);
 
             foreach (var fine in overdueFines)
             {
                 var message = $"Member {fine.MemberId} has an overdue fine for Book {fine.BookId}. Amount: {fine.Amount:C}";
                 _logger.LogWarning(message);
-
-                // Add to in-memory notification queue
-                _notificationService.AddNotification(message);
+                fine.Amount++;
+                await db.SaveChangesAsync();
+                _notificationService.AddNotification(fine.MemberId,message);
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken); // check every 5 seconds
+            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken); 
         }
     }
 }

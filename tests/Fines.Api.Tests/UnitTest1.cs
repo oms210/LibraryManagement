@@ -1,4 +1,4 @@
-namespace LibraryManagement.Tests
+namespace Fines.Api.Tests
 {
     public class UnitTest1
     {

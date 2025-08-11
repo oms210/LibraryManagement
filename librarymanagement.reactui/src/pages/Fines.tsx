@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import finesApi from "../services/finesApi";
+import { useAuth } from '../AuthContext';
+import { FINES_API_BASE_URL } from '../services/apis';
 
 interface Fine {
   id: number;
@@ -9,23 +10,35 @@ interface Fine {
   collected: boolean;
 }
 
-export default function FinesPage() {
+export default function Fines() {
   const [fines, setFines] = useState<Fine[]>([]);
-
+    const { role } = useAuth();
   useEffect(() => {
-    finesApi.get("/fines").then(response => setFines(response.data));
+    fetchFines();
   }, []);
-
-  const collectFine = (id: number) => {
-    finesApi.post(`/fines/${id}/collect`).then(() => {
-      setFines(fines.map(f => f.id === id ? { ...f, collected: true } : f));
+  
+  const fetchFines = async () => {
+    const response = await fetch(`${FINES_API_BASE_URL}/api/fines`,{ headers: { Role: role }});
+    const data = await response.json();
+    setFines(data);
+  };
+ const collectFine =async (id: number) => {
+    await fetch(`${FINES_API_BASE_URL}/fines/${id}/collect`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+  
     });
+   setFines(fines.map(f => f.id === id ? { ...f, collected: true } : f));
   };
 
   return (
     <div className="container">
       <h2 className="mb-4">💰 Fines Management</h2>
-
+  {role !== 'manager' && (
+        <div className="alert alert-warning">
+          You do not have permission to manage fines.
+        </div>
+      )}
       {fines.length === 0 ? (
         <div className="alert alert-info">No fines found.</div>
       ) : (

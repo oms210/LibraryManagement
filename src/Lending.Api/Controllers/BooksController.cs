@@ -16,12 +16,14 @@ namespace Lending.Api.Controllers
         {
             _db = db;
         }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
             => await _db.Books.ToListAsync();
         [HttpPost]
         public async Task<ActionResult<Book>> CreateBook(Book book)
         {
+            if (GetRole() != "manager") return Forbid();
             _db.Books.Add(book);
             await _db.SaveChangesAsync();
             return CreatedAtAction(nameof(GetBooks), new { id = book.Id }, book);
@@ -29,6 +31,7 @@ namespace Lending.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBook(int id, Book book)
         {
+            if (GetRole() != "manager") return Forbid();
             if (id != book.Id) return BadRequest();
 
             _db.Entry(book).State = EntityState.Modified;
@@ -38,6 +41,7 @@ namespace Lending.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {
+            if (GetRole() != "manager") return Forbid();
             var book = await _db.Books.FindAsync(id);
             if (book == null) return NotFound();
 
@@ -45,5 +49,12 @@ namespace Lending.Api.Controllers
             await _db.SaveChangesAsync();
             return NoContent();
         }
+
+        #region "Private Methods"
+        //Quick fix to get the role from the request headers.
+        //In real world applications, this should be handled by a proper authentication and authorization mechanism (like adding JWT tokens or using ASP.NET Core Identity).
+        private string GetRole() =>
+        Request.Headers.TryGetValue("Role", out var role) ? role.ToString() : "member";
+        #endregion
     }
 }
