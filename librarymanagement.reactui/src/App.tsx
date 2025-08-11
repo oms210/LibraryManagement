@@ -37,7 +37,7 @@ export default function App() {
             {role === 'manager' && <Link className="nav-link" to="/members">Members</Link>}
             <Link className="nav-link" to="/loans">Loans</Link>
             {role === 'member' && <Link className="nav-link" to="/notifications">Notifications</Link>}
-            <Link className="nav-link" to="/fines">Fines</Link>
+            {role === 'manager' && <Link className="nav-link" to="/fines">Fines</Link>}
           </div>
 
           <div className="d-flex ms-auto gap-2">
@@ -80,7 +80,7 @@ export default function App() {
             {role === 'manager' && <Route path="/members" element={<Members />} />}
             <Route path="/loans" element={<Loans />} />
             {role === 'member' && <Route path="/notifications" element={<Notifications />} />}
-            <Route path="/fines" element={<Fines />} />
+            {role === 'member' && <Route path="/fines" element={<Fines />} />}
           </Routes>
         </div>
       </main>

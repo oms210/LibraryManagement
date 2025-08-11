@@ -14,6 +14,13 @@ builder.Services.AddMemoryCache();
 builder.Services.AddDbContext<FinesDbContext>(opt =>
 opt.UseSqlite("Data Source=/app/data/fines/fines.db"));
 
+//var dataDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "data", "fines"));
+//Directory.CreateDirectory(dataDir);
+//var dbPath = Path.Combine(dataDir, "fines.db");
+//var connString = $"Data Source={dbPath}";
+//builder.Services.AddDbContext<FinesDbContext>(opt =>
+//    opt.UseSqlite(connString));
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(
     ConnectionMultiplexer.Connect("redis:6379"));
 builder.Services.AddSingleton<NotificationService>();
