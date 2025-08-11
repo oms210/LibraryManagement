@@ -53,7 +53,11 @@ A full-stack solution for managing library book lending and fines, built with AS
 
 ## Project Structure
 
-/src /Lending.Api         # Book lending API (.NET 8) /Fines.Api           # Fines and notifications API (.NET 8) /LibraryManagement   # Shared models (if present) /LibraryManagement.Shared # Shared code (if present) /librarymanagement.reactui # React + TypeScript frontend (Vite) docker-compose.yml     # Orchestration for all services
+/src /Lending.Api         # Book lending API (.NET 8) 
+/Fines.Api           # Fines and notifications API (.NET 8) /
+LibraryManagement   # Shared models (if present) 
+/LibraryManagement.Shared # Shared code (if present) 
+/librarymanagement.reactui # React + TypeScript frontend (Vite) docker-compose.yml     # Orchestration for all services
 
 ---
 
@@ -66,9 +70,10 @@ A full-stack solution for managing library book lending and fines, built with AS
 - [Node.js (v18+)](https://nodejs.org/) (optional, for local development)
 
 ### 1. Clone the Repository
-
-- **git clone https://github.com/oms210/LibraryManagement.git cd LibraryManagement
-
+````````
+git clone https://github.com/oms210/LibraryManagement.git 
+cd LibraryManagement
+````````
 ### 2. Run the Application with Docker Compose
 
 Simply run:
