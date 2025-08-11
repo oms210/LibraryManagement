@@ -42,6 +42,9 @@ namespace Lending.Api.Controllers
         public async Task<IActionResult> DeleteBook(int id)
         {
             if (GetRole() != "manager") return Forbid();
+            var hasActiveLoans = await _db.Loans.AnyAsync(l => l.BookId == id && !l.Returned);
+            if (hasActiveLoans) 
+                return BadRequest("Cannot delete a book with active loans.");
             var book = await _db.Books.FindAsync(id);
             if (book == null) return NotFound();
 

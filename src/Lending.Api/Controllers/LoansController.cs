@@ -21,17 +21,41 @@ namespace Lending.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Loan>>> GetLoans([FromQuery] int? memberId = null)
         {
-            var query = _db.Loans
-        .Include(l => l.Book)
-        .Include(l => l.Member)
-        .AsQueryable();
-
+            //    var query = _db.Loans
+            //.Include(l => l.Book)
+            //.Include(l => l.Member)
+            //.AsQueryable();
+            var query = _db.Loans.AsNoTracking().AsQueryable();
             if (memberId.HasValue)
                 query = query.Where(l => l.MemberId == memberId.Value);
 
-            return await query
-                .OrderByDescending(l => l.BorrowedAt)
-                .ToListAsync();
+            //return await query
+            //    .Where(l => l.Book != null && l.Member != null)
+            //    .OrderByDescending(l => l.BorrowedAt)
+            //    .Select(l => new
+            //     {
+            //         l.Id,
+            //         l.BorrowedAt,
+            //         l.DueDate,
+            //         l.Returned,
+            //         Book = new { l.Book!.Id, l.Book!.Title },
+            //         Member = new { l.Member!.Id, l.Member!.FirstName, l.Member!.LastName }
+            //     })
+            //    .ToListAsync();
+            var result = await query
+        .Where(l => l.Book != null && l.Member != null) // <-- filter out orphans
+        .OrderByDescending(l => l.BorrowedAt)
+        .Select(l => new
+        {
+            l.Id,
+            l.BorrowedAt,
+            l.DueDate,
+            l.Returned,
+            Book = new { l.Book!.Id, l.Book!.Title },
+            Member = new { l.Member!.Id, l.Member!.FirstName, l.Member!.LastName }
+        })
+        .ToListAsync();
+            return Ok(result);
         }
         [HttpPost("{memberId}/borrow/{bookId}")]
         public async Task<IActionResult> BorrowBook(int memberId, int bookId)

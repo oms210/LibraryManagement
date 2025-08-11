@@ -7,8 +7,8 @@ interface Loan {
   borrowedAt: string;
   dueDate: string;
   returned: boolean;
-  book: { id: number; title: string };
-  member: { id: number; firstName: string; lastName: string };
+  book?: { id: number; title: string }|null;
+  member?: { id: number; firstName: string; lastName: string } | null;
 }
 
 export default function Loans() {
@@ -17,6 +17,10 @@ export default function Loans() {
   const { role,  memberId } = useAuth();
 
   useEffect(() => {
+    if (role === 'member' && !memberId) {
+      setLoans([]);
+      return;
+    }
     fetchLoans();
   }, [role, memberId]);
 
@@ -28,9 +32,9 @@ export default function Loans() {
           ? `${LENDING_API_BASE_URL}/api/loans?memberId=${memberId}`
           : `${LENDING_API_BASE_URL}/api/loans`;
 
-      const res = await fetch(url, { headers: { Role: role } });
-      if (!res.ok) throw new Error(`Fetch loans failed: ${res.status}`);
-      const data: Loan[] = await res.json();
+      const response = await fetch(url, { headers: { Role: role } });
+      if (!response.ok) throw new Error(`Fetch loans failed: ${response.status}`);
+      const data: Loan[] = await response.json();
       setLoans(data);
     } catch (err) {
       console.error(err);
@@ -60,9 +64,9 @@ export default function Loans() {
     <div className="container">
       <h2 className="mb-4">📖 Loans</h2>
 
-      {role === 'member' && (
+      {role === 'member' && memberId && (
         <div className="alert alert-info py-2">
-          Showing loans for the selected member in the navbar.
+          Showing loans for member #{memberId}.
         </div>
       )}
 
@@ -90,10 +94,10 @@ export default function Loans() {
             {!loading &&
               loans.map((loan) => (
                 <tr key={loan.id}>
-                  <td>{loan.book.title}</td>
-                  <td>
-                    {loan.member.firstName} {loan.member.lastName}
-                  </td>
+                  <td>{loan.book?.title ?? "(Unknown book)"}</td>
+
+                 <td>{loan.member ? `${loan.member.firstName} ${loan.member.lastName}` : "(Unknown member)"}</td>
+
                   <td>{new Date(loan.borrowedAt).toLocaleString()}</td>
                   <td>{new Date(loan.dueDate).toLocaleString()}</td>
                   <td>
