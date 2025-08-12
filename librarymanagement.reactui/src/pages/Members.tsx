@@ -86,11 +86,6 @@ export default function Members() {
       else
         fetchMembers();
 
-      // // Optimistic local update
-      // setMembers(prev =>
-      //   prev.map(m => (m.id === id ? { ...m, ...draft } as Member : m))
-      // );
-
       cancelEdit();
     } catch (error) {
       console.error('Error updating member:', error);

@@ -1,5 +1,4 @@
-﻿// BackgroundServices/FineSubscriberService.cs
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Fines.Api.Data;
 using Fines.Api.Models;
@@ -16,7 +15,7 @@ namespace Fines.Api.BackgroundServices
         private static readonly JsonSerializerOptions JsonOpts = new()
         {
             PropertyNameCaseInsensitive = true,
-            NumberHandling = JsonNumberHandling.AllowReadingFromString // in case numbers arrive as strings
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
         };
 
         public FineSubscriberService(

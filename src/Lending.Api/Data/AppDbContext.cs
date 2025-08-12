@@ -1,6 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Lending.Api.Models;
-using Lending.Api.Models;
+﻿using Lending.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lending.Api.Data
 {
