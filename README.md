@@ -74,7 +74,6 @@ classDiagram
   Book "1" <-- "many" Loan : contains
   Member "1" <-- "many" Loan : borrows
 ```
-![Lending.Api Class Diagram](images/LendingApiClassDiagram.png)
 
 ### Fines.Api
 
@@ -98,7 +97,6 @@ classDiagram
 
   Fine "1" --> "1" OverdueFineEvent : triggered by
 ```
-![Fines.Api Class Diagram](images/FinesApiClassDiagram.png)
 
 ---
 
@@ -120,7 +118,6 @@ flowchart TD
   ReactUI -->|POST /api/fines/pay| FinesApi
   ReactUI -->|GET /api/notifications| FinesApi
 ```
-![API Endpoints Diagram](images/APIEndpointsDiagram.png)
 
 ---
 
@@ -141,7 +138,6 @@ flowchart LR
   LendingApi <--> Redis
   FinesApi <--> Redis
 ```
-![Data Flow Diagram](images/DataFlowDiagram.png)
 
 ---
 
