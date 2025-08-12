@@ -27,7 +27,7 @@ A full-stack solution for managing library book lending and fines, built with AS
 - **Frontend**: React + TypeScript app powered by Vite.
 - **Inter-service Communication**: Redis is used for pub/sub notifications between APIs.
 - **Containerization**: All services are orchestrated with Docker Compose for easy startup and integration.
- ````````
+ ```mermaid
  graph TD
   LendingApi["Lending.Api (.NET 8)"]
   FinesApi["Fines.Api (.NET 8)"]
@@ -41,7 +41,107 @@ A full-stack solution for managing library book lending and fines, built with AS
   FinesApi -->|SQLite| SQLite
      LendingApi <--> |Pub/Sub| Redis
      FinesApi <--> |Pub/Sub| Redis
-````````
+```
+![Architecture Diagram](images/ArchitectureDiagram.png)
+---
+
+## Class Diagram
+
+### Lending.Api
+
+```mermaid
+classDiagram
+  class Book {
+    int Id
+    string Title
+    string ISBN
+    int Status
+  }
+  class Member {
+    int Id
+    string FirstName
+    string LastName
+    string Email
+  }
+  class Loan {
+    int Id
+    int BookId
+    int MemberId
+    DateTime BorrowedAt
+    DateTime DueDate
+    bool Returned
+  }
+  Book "1" <-- "many" Loan : contains
+  Member "1" <-- "many" Loan : borrows
+```
+![Lending.Api Class Diagram](images/LendingApiClassDiagram.png)
+
+### Fines.Api
+
+```mermaid
+classDiagram
+  class Fine {
+    int Id
+    int MemberId
+    int BookId
+    decimal Amount
+    bool Collected
+    DateTime AssessedAt
+  }
+  class OverdueFineEvent {
+    int Id
+    int MemberId
+    int BookId
+    decimal Amount
+    DateTime OverdueAt
+  }
+
+  Fine "1" --> "1" OverdueFineEvent : triggered by
+```
+![Fines.Api Class Diagram](images/FinesApiClassDiagram.png)
+
+---
+
+## API Endpoints Diagram
+
+```mermaid
+flowchart TD
+  ReactUI["React UI"]
+  LendingApi["Lending.Api"]
+  FinesApi["Fines.Api"]
+
+  ReactUI -->|GET /api/books| LendingApi
+  ReactUI -->|POST /api/books| LendingApi
+  ReactUI -->|GET /api/members| LendingApi
+  ReactUI -->|POST /api/loans| LendingApi
+  ReactUI -->|PUT /api/loans/*id*/return| LendingApi
+
+  ReactUI -->|GET /api/fines| FinesApi
+  ReactUI -->|POST /api/fines/pay| FinesApi
+  ReactUI -->|GET /api/notifications| FinesApi
+```
+![API Endpoints Diagram](images/APIEndpointsDiagram.png)
+
+---
+
+## Data Flow Diagram
+
+```mermaid
+flowchart LR
+  ReactUI["React UI"]
+  LendingApi["Lending.Api"]
+  FinesApi["Fines.Api"]
+  Redis["Redis (Pub/Sub)"]
+  SQLite["SQLite DB"]
+
+  ReactUI <--> LendingApi
+  ReactUI <--> FinesApi
+  LendingApi <--> SQLite
+  FinesApi <--> SQLite
+  LendingApi <--> Redis
+  FinesApi <--> Redis
+```
+![Data Flow Diagram](images/DataFlowDiagram.png)
 
 ---
 
