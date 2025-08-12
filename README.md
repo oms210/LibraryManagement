@@ -42,7 +42,7 @@ A full-stack solution for managing library book lending and fines, built with AS
      LendingApi <--> |Pub/Sub| Redis
      FinesApi <--> |Pub/Sub| Redis
 ```
-![Architecture Diagram](images/ArchitectureDiagram.png)
+
 ---
 
 ## Class Diagram
